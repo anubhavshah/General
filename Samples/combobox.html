@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+  
+	<style>
+	.ui-autocomplete {
+		max-height: 400px;
+		overflow-y: auto;
+		/* prevent horizontal scrollbar */
+		overflow-x: hidden;
+		/* add padding to account for vertical scrollbar */
+		padding-right: 20px;
+	}
+	.ui-combobox {
+		position: relative;
+		display: inline-block;
+	}
+	.ui-button {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		margin-left: -1px;
+		padding: 0;
+		/* adjust styles for IE 6/7 */
+		*height: 1.7em;
+		*top: 0.1em;
+	}
+	.ui-autocomplete-input {
+		margin: 0;
+		padding: 0.3em;
+	}
+	</style>
+	<script>
+	(function( $ ) {
+		$.widget( "ui.combobox", {
+			_create: function() {
+				var input,
+					self = this,
+					select = this.element.hide(),
+					selected = select.children( ":selected" ),
+					value = selected.val() ? selected.text() : "",
+					wrapper = $( "<span>" )
+						.addClass( "ui-combobox" )
+						.insertAfter( select );
+
+				input = $( "<input>" )
+					.appendTo( wrapper )
+					.val( value )
+					.addClass( "ui-state-default" )
+					.autocomplete({
+						delay: 0,
+						minLength: 0,
+						source: function( request, response ) {
+							var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+							var matches = select.children( "option" ).map(function() {
+								var text = $( this ).text();
+								if ( this.value && ( !request.term || matcher.test(text) ) )
+									return {
+										label: text.replace(
+											new RegExp(
+												"(?![^&;]+;)(?!<[^<>]*)(" +
+												$.ui.autocomplete.escapeRegex(request.term) +
+												")(?![^<>]*>)(?![^&;]+;)", "gi"
+											), "<strong>$1</strong>" ),
+										value: text,
+										option: this
+									};
+							});
+							if(matches && matches.length == 1)
+							{
+									$( this ).val( matches[0].value );
+									select.val( matches[0].option.value );
+							}
+							response( matches );
+						},
+						select: function( event, ui ) {
+							ui.item.option.selected = true;
+							self._trigger( "selected", event, {
+								item: ui.item.option
+							});
+						},
+						change: function( event, ui ) {
+							if ( !ui.item ) {
+								var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
+									valid = false;
+								select.children( "option" ).each(function() {
+									if ( $( this ).text().match( matcher ) ) {
+										this.selected = valid = true;
+										return false;
+									}
+								});
+								if ( !valid ) {
+									// remove invalid value, as it didn't match anything
+									$( this ).val( "" );
+									select.val( "" );
+									input.data( "autocomplete" ).term = "";
+									return false;
+								}
+							}
+						}
+					})
+					.addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+				input.data( "autocomplete" )._renderItem = function( ul, item ) {
+					return $( "<li></li>" )
+						.data( "item.autocomplete", item )
+						.append( "<a>" + item.label + "</a>" )
+						.appendTo( ul );
+				};
+
+				$( "<a>" )
+					.attr( "tabIndex", -1 )
+					.attr( "title", "Show All Items" )
+					.appendTo( wrapper )
+					.button({
+						icons: {
+							primary: "ui-icon-triangle-1-s"
+						},
+						text: false
+					})
+					.removeClass( "ui-corner-all" )
+					.addClass( "ui-corner-right ui-button-icon" )
+					.click(function() {
+						// close if already visible
+						if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+							input.autocomplete( "close" );
+							return;
+						}
+
+						// work around a bug (likely same cause as #5265)
+						$( this ).blur();
+
+						// pass empty string as value to search for, displaying all results
+						input.autocomplete( "search", "" );
+						input.focus();
+					});
+			},
+
+			destroy: function() {
+				this.wrapper.remove();
+				this.element.show();
+				$.Widget.prototype.destroy.call( this );
+			}
+		});
+	})( jQuery );
+
+	$(document).ready(function() {
+		$( "select" ).combobox();
+  });
+  </script>
+</head>
+<body>
+<div class="ui-widget">
+	<label>Your preferred programming language: </label>
+	<select id="combobox">
+		<option value="">Select one...</option>
+		<option value="ActionScript">ActionScript</option>
+		<option value="AppleScript">AppleScript</option>
+		<option value="Asp">Asp</option>
+		<option value="BASIC">BASIC</option>
+		<option value="C">C</option>
+		<option value="C++">C++</option>
+		<option value="Clojure">Clojure</option>
+		<option value="COBOL">COBOL</option>
+		<option value="ColdFusion">ColdFusion</option>
+		<option value="Erlang">Erlang</option>
+		<option value="Fortran">Fortran</option>
+		<option value="Groovy">Groovy</option>
+		<option value="Haskell">Haskell</option>
+		<option value="Java">Java</option>
+		<option value="JavaScript">JavaScript</option>
+		<option value="Lisp">Lisp</option>
+		<option value="Perl">Perl</option>
+		<option value="PHP">PHP</option>
+		<option value="Python">Python</option>
+		<option value="Ruby">Ruby</option>
+		<option value="Scala">Scala</option>
+		<option value="Scheme">Scheme</option>
+	</select>
+</div>
+
+<br/>
+
+US states: <select>
+<option value="">Select one...</option>
+<option Value="AK">Alaska</option>
+<option Value="AZ">Arizona</option>
+<option Value="AR">Arkansas</option>
+<option Value="CA">California</option>
+<option Value="CO">Colorado</option>
+<option Value="CT">Connecticut</option>
+<option Value="DE">Delaware</option>
+<option Value="DC">District of Columbia</option>
+<option Value="FL">Florida</option>
+<option Value="GA">Georgia</option>
+<option Value="HI">Hawaii</option>
+<option Value="ID">Idaho</option>
+<option Value="IL">Illinois</option>
+<option Value="IN">Indiana</option>
+<option Value="IA">Iowa</option>
+<option Value="KS">Kansas</option>
+<option Value="KY">Kentucky</option>
+<option Value="LA">Louisiana</option>
+<option Value="ME">Maine</option>
+<option Value="MD">Maryland</option>
+<option Value="MA">Massachusetts</option>
+<option Value="MI">Michigan</option>
+<option Value="MN">Minnesota</option>
+<option Value="MS">Mississippi</option>
+<option Value="MO">Missouri</option>
+<option Value="MT">Montana</option>
+<option Value="NE">Nebraska</option>
+<option Value="NV">Nevada</option>
+<option Value="NH">New Hampshire</option>
+<option Value="NJ">New Jersey</option>
+<option Value="NM">New Mexico</option>
+<option Value="NY">New York</option>
+<option Value="NC">North Carolina</option>
+<option Value="ND">North Dakota</option>
+<option Value="OH">Ohio</option>
+<option Value="OK">Oklahoma</option>
+<option Value="OR">Oregon</option>
+<option Value="PA">Pennsylvania</option>
+<option Value="RI">Rhode Island</option>
+<option Value="SC">South Carolina</option>
+<option Value="SD">South Dakota</option>
+<option Value="TN">Tennessee</option>
+<option Value="TX">Texas</option>
+<option Value="UT">Utah</option>
+<option Value="VT">Vermont</option>
+<option Value="VA">Virginia</option>
+<option Value="WA">Washington</option>
+<option Value="WV">West Virginia</option>
+<option Value="WI">Wisconsin</option>
+<option Value="WY">Wyoming</option>
+
+</select>
+
+<br/>
+<br/>
+
+languages:
+<select><option value="">please select
+</option><option value="1026">Bulgarian</option>
+<option value="1050">Croatian</option>
+<option value="1029">Czech</option>
+<option value="1030">Danish</option>
+<option value="2067">Dutch - Belgium</option>
+<option value="1043">Dutch - The Netherlands</option>
+<option value="6153">English - Ireland</option>
+<option value="2057">English - United Kingdom</option>
+<option selected="selected" value="1033">English - United States</option>
+<option value="1061">Estonian</option>
+<option value="1035">Finnish</option>
+<option value="2060">French - Belgium</option>
+<option value="1036">French - France</option>
+<option value="4108">French - Switzerland</option>
+<option value="1071">FYRO Macedonian</option>
+<option value="3079">German - Austria</option>
+<option value="1031">German - Germany</option>
+<option value="2055">German - Switzerland</option>
+<option value="1032">Greek</option>
+<option value="1037">Hebrew</option>
+<option value="1038">Hungarian</option>
+<option value="1039">Icelandic</option>
+<option value="1040">Italian - Italy</option>
+<option value="1087">Kazakh</option>
+<option value="1062">Latvian</option>
+<option value="1063">Lithuanian</option>
+<option value="1044">Norwegian - Bokmål</option>
+<option value="1045">Polish</option>
+<option value="2070">Portuguese - Portugal</option>
+<option value="1048">Romanian - Romania</option>
+<option value="1049">Russian</option>
+<option value="2074">Serbian - Latin</option>
+<option value="1060">Slovenian</option>
+<option value="1034">Spanish - Spain</option>
+<option value="1053">Swedish - Sweden</option>
+<option value="1055">Turkish</option>
+<option value="1058">Ukrainian</option></select>
+
+</body>
+</html>
